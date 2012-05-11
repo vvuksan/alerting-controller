@@ -14,6 +14,7 @@
 .state_critical, .state_down { background-color: #F39C9B; }
 .state_pending { background-color: #488acf; }
 .state_unknown { background-color: orange; }
+.state_notification { background-color: #69b3b3; }
 </style>
 <script>
 $(function() {
@@ -110,8 +111,14 @@ if ( isset($arguments['host_name']) && $arguments['host_name'] != "none" ) {
   print "<table border=1>
   <tr><th>&nbsp;</th><th>Alert</th></tr>";
   foreach ( $nagios['services'][$host_name] as $alert => $alert_settings ) {
-    $current_state = $alert_settings['current_state'];
-    print "<tr class=\"state_" . $states[$current_state] . "\"><td><input type=\"checkbox\" class=\"checkbox\" name=\"alert[]\" value=\"" . $alert . "\"></td>";
+    if ( isset($alert_settings['notifications_enabled']) && $alert_settings['notifications_enabled'] == 0 ) {
+      $state = "notification";
+    } else {
+      $current_state = $alert_settings['current_state'];
+      $state = $states[$current_state];
+    }
+
+    print "<tr class=\"state_" . $state . "\"><td><input type=\"checkbox\" class=\"checkbox\" name=\"alert[]\" value=\"" . $alert . "\"></td>";
     print "<td>" . $alert . "</td></tr>";
   }
   print "<tr><td colspan=2 align=\"center\"><button class=\"btn btn-inverse\" id=\"select_all\" onClick=\"checkAll(this.form); return false;\">Select All</button></tr>";
