@@ -115,8 +115,8 @@ if ( isset($arguments['host_name']) && $arguments['host_name'] != "none" ) {
     print "<td>" . $alert . "</td></tr>";
   }
   print "<tr><td colspan=2 align=\"center\"><button class=\"btn btn-inverse\" id=\"select_all\" onClick=\"checkAll(this.form); return false;\">Select All</button></tr>";
-  print "<tr><th>Disable</th><td><input type=\"radio\" name=\"action\" value=\"disable\" checked>Disable</input></td></tr>";
-  print "<tr><th>Enable</th><td><input type=\"radio\" name=\"action\" value=\"enable\">Enable</input></td></tr>";
+  print "<tr><th>Disable</th><td><input type=\"radio\" name=\"action\" value=\"disable_notifications\" checked>Disable Notifications</input></td></tr>";
+  print "<tr><th>Enable</th><td><input type=\"radio\" name=\"action\" value=\"enable_notifications\">Enable Notifications</input></td></tr>";
   print "<tr><th>Schedule Downtime</th><td><input type=\"radio\" name=\"action\" value=\"downtime\">Downtime</input>, 
    Duration <input size=\"4\" type=\"text\" value=\"1200\" name=\"downtime_duration\"> seconds</td></tr>";
   print "</table>";

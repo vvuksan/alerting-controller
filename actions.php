@@ -27,11 +27,11 @@ if ( ! isset($_REQUEST['host_name']) || ! in_array($_REQUEST['host_name'], $host
 
 switch ( $_REQUEST['action'] ) {
 
-    case "disable":
-      $action = "disabled";
+    case "disable_notifications":
+      $action = "notifications will be disabled";
       break;
-    case "enable":
-      $action = "enabled";
+    case "enable_notifications":
+      $action = "notifications will be enabled";
       break;
     case "downtime":
       $action = "scheduled for downtime";
@@ -44,7 +44,22 @@ print '
 ';
 
 foreach ( $_REQUEST['alert'] as $index => $alert ) {
-  print "<strong>" . $alert .  "</strong> is being " . $action . "<br />";
+  print "<strong>" . $alert .  "</strong> " . $action . "<br />";
+
+  switch ( $_REQUEST['action'] ) {
+
+      case "disable_notifications":
+	disable_service_notifications($_REQUEST['host_name'], $alert);
+	break;
+      case "enable_notifications":
+	enable_service_notifications($_REQUEST['host_name'], $alert);
+	break;
+      case "downtime":
+	schedule_service_downtime($_REQUEST['host_name'], $alert, is_numeric($_REQUEST['downtime_duration']) ? $_REQUEST['downtime_duration'] : 0 );
+	break;
+
+  }
+
 }
 
 print '</div>';

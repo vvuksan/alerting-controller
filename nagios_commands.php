@@ -46,7 +46,7 @@ function send_command_to_nagios( $command_string ) {
   global $conf;
   
   if ( file_exists ( $conf['nagios_command_file'] ) ) {
-    $fifo = fopen( $conf['nagios_command_file'], 'w'); 
+    $fifo = fopen( $conf['nagios_command_file'], 'a'); 
     fwrite($fifo, $command_string); 
     fclose($fifo);
 
