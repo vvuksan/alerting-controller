@@ -96,7 +96,7 @@ $states = array (
 
 ?>
 <div class="span6">
-  <form id="alert-form"><select id="host_chooser" onChange="form.submit();" name=host_name>
+  <form id="alert-form">Hostname: <select id="host_chooser" onChange="form.submit();" name=host_name>
   <option value="none">Select one</option>";
 <?php
   foreach ( $nagios['hosts'] as $host => $alerts ) {
