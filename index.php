@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<title>Alerting controller</title>
 <meta http-equiv="Content-type" content="text/html; charset=utf-8">
 <link type="text/css" href="css/smoothness/jquery-ui-1.8.14.custom.min.css" rel="stylesheet" />
 <link type="text/css" href="css/bootstrap.css" rel="stylesheet" />
@@ -36,6 +37,14 @@ function sendAction() {
   return false;
 }
 
+function getMetricsMatches() {
+  $("#multiple_results").html('<img src="img/spin.gif">');
+  $.get('search.php', $("#search-form").serialize() , function(data) {
+    $("#multiple_results").html(data);
+  });
+  return false;
+}
+
 </script>
 </head>
 <body>
@@ -51,7 +60,8 @@ function sendAction() {
           <a class="brand" href="#">Alert Controller</a>
           <div class="nav-collapse">
             <ul class="nav">
-              <li class="active"><a href="#">Home</a></li>
+              <li class="active"><a href="./">Host Search</a></li>
+              <li class="active"><a href="?regex=1">Regex Search</a></li>
             </ul>
           </div><!--/.nav-collapse -->
         </div>
@@ -94,50 +104,73 @@ $states = array (
   3 => "unknown"
 );
 
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+if ( !isset($_REQUEST['regex']) ) {
+
 ?>
 <div class="span6">
-  <form id="alert-form">Hostname: <select id="host_chooser" onChange="form.submit();" name=host_name>
+  <form id="alert-form">Hostname: 
+  <select id="host_chooser" onChange="form.submit();" name=host_name>
   <option value="none">Select one</option>";
 <?php
   foreach ( $nagios['hosts'] as $host => $alerts ) {
-    print "<option value=\"" . $host . "\">" . $host . "</option>";
+      print "<option value=\"" . $host . "\">" . $host . "</option>";
   }
   print "</select>";
 
-if ( isset($arguments['host_name']) && $arguments['host_name'] != "none" ) {
+  if ( isset($arguments['host_name']) && $arguments['host_name'] != "none" ) {
 
-  $host_name = $arguments['host_name'];
+    $host_name = $arguments['host_name'];
 
-  print "<table border=1>
-  <tr><th>&nbsp;</th><th>Alert</th></tr>";
-  foreach ( $nagios['services'][$host_name] as $alert => $alert_settings ) {
-    if ( isset($alert_settings['notifications_enabled']) && $alert_settings['notifications_enabled'] == 0 ) {
-      $state = "notification";
-    } else {
-      $current_state = $alert_settings['current_state'];
-      $state = $states[$current_state];
+    print "<table border=1>
+    <tr><th>&nbsp;</th><th>Alert</th></tr>";
+    foreach ( $nagios['services'][$host_name] as $alert => $alert_settings ) {
+      if ( isset($alert_settings['notifications_enabled']) && $alert_settings['notifications_enabled'] == 0 ) {
+	$state = "notification";
+      } else {
+	$current_state = $alert_settings['current_state'];
+	$state = $states[$current_state];
+      }
+
+      print "<tr class=\"state_" . $state . "\"><td><input type=\"checkbox\" class=\"checkbox\" name=\"alert[]\" value=\"" . $alert . "\"></td>";
+      print "<td>" . $alert . "</td></tr>";
     }
+    print "<tr><td colspan=2 align=\"center\"><button class=\"btn btn-inverse\" id=\"select_all\" onClick=\"checkAll(this.form); return false;\">Select All</button></tr>";
+    print "<tr><th>Disable</th><td><input type=\"radio\" name=\"action\" value=\"disable_notifications\" checked>Disable Notifications</input></td></tr>";
+    print "<tr><th>Enable</th><td><input type=\"radio\" name=\"action\" value=\"enable_notifications\">Enable Notifications</input></td></tr>";
+    print "<tr><th>Schedule Downtime</th><td><input type=\"radio\" name=\"action\" value=\"downtime\">Downtime</input>, 
+    Duration <input size=\"4\" type=\"text\" value=\"1200\" name=\"downtime_duration\"> seconds</td></tr>";
+    print "</table>";
 
-    print "<tr class=\"state_" . $state . "\"><td><input type=\"checkbox\" class=\"checkbox\" name=\"alert[]\" value=\"" . $alert . "\"></td>";
-    print "<td>" . $alert . "</td></tr>";
+
+    print "<p> </p><input class=\"submit_button btn btn-inverse\" type=\"submit\" onclick=\"sendAction(); return false;\" value=\"Submit\" />
+    </form>
+    <script>
+    $(\"#host_chooser\").val(\"" . $host_name . "\");
+    </script>
+    ";
+
   }
-  print "<tr><td colspan=2 align=\"center\"><button class=\"btn btn-inverse\" id=\"select_all\" onClick=\"checkAll(this.form); return false;\">Select All</button></tr>";
-  print "<tr><th>Disable</th><td><input type=\"radio\" name=\"action\" value=\"disable_notifications\" checked>Disable Notifications</input></td></tr>";
-  print "<tr><th>Enable</th><td><input type=\"radio\" name=\"action\" value=\"enable_notifications\">Enable Notifications</input></td></tr>";
-  print "<tr><th>Schedule Downtime</th><td><input type=\"radio\" name=\"action\" value=\"downtime\">Downtime</input>, 
-   Duration <input size=\"4\" type=\"text\" value=\"1200\" name=\"downtime_duration\"> seconds</td></tr>";
-  print "</table>";
 
+} // end of if ( !isset($_REQUEST['regex']) )
 
-  print "<p> </p><input class=\"submit_button btn btn-inverse\" type=\"submit\" onclick=\"sendAction(); return false;\" value=\"Submit\" />
-  </form>
-  <script>
-  $(\"#host_chooser\").val(\"" . $host_name . "\");
-  </script>
-  ";
+if ( isset($_REQUEST['regex']) && $_REQUEST['regex'] == 1 ) {
 
+?>
+
+<form id="search-form">
+Regular expression <input type="text" name="search_term">
+<input class="submit_button btn btn-inverse" type="submit" onclick="getMetricsMatches(); return false;" value="Submit" />
+</form>
+
+<div id="multiple_results">
+</div>
+
+<?
 }
-
 #print "<PRE>";print_r($nagios);
 
 ?>

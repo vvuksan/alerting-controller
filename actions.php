@@ -17,13 +17,23 @@ $nagios = parse_nagios_status_file($conf['nagios_status_file']);
 
 $hosts = array_keys($nagios['hosts']);
 
-if ( ! isset($_REQUEST['host_name']) || ! in_array($_REQUEST['host_name'], $hosts) ) {
+if ( (! isset($_REQUEST['host_name']) or ! in_array($_REQUEST['host_name'], $hosts) ) and !isset($_REQUEST['regex_search']) ) {
   print '
       <div class="alert alert-error">
         <strong>Problem!</strong> Host name is not valid ' . $_REQUEST['host_name'] . '. Please fix and resubmit.
       </div>
   ';
+  exit(1);
+} else {
+  $host_name = $_REQUEST['host_name'];
 }
+
+if ( isset($_REQUEST['regex_search']) and $_REQUEST['regex_search'] == 1 ) {
+  $regex_search = TRUE;
+} else {
+  $regex_search = FALSE;
+}
+
 
 switch ( $_REQUEST['action'] ) {
 
@@ -44,19 +54,37 @@ print '
 ';
 
 foreach ( $_REQUEST['alert'] as $index => $alert ) {
-  print "<strong>" . $alert .  "</strong> " . $action . "<br />";
+  // If it's regex_search we are encoding hostname and alert with a pipe
+  if ( $regex_search ) {
+    if ( preg_match("/^(.*)(\|)(.*)/", $alert, $out ) ) {
+      $host_name = $out[1];
+      $alert_name = $out[3];
+    } else {
+      continue;
+    }
+  } else {
+    $alert_name = $alert;
+  }
 
-  switch ( $_REQUEST['action'] ) {
+  // Make sure alert exists
+  if ( isset($nagios['services'][$host_name][$alert_name] ) ) {
 
-      case "disable_notifications":
-	disable_service_notifications($_REQUEST['host_name'], $alert);
-	break;
-      case "enable_notifications":
-	enable_service_notifications($_REQUEST['host_name'], $alert);
-	break;
-      case "downtime":
-	schedule_service_downtime($_REQUEST['host_name'], $alert, is_numeric($_REQUEST['downtime_duration']) ? $_REQUEST['downtime_duration'] : 0 );
-	break;
+    print "<strong>" . $alert .  "</strong> " . $action . "<br />";
+
+
+    switch ( $_REQUEST['action'] ) {
+
+	case "disable_notifications":
+	  disable_service_notifications($host_name, $alert_name);
+	  break;
+	case "enable_notifications":
+	  enable_service_notifications($host_name, $alert_name);
+	  break;
+	case "downtime":
+	  schedule_service_downtime($host_name, $alert_name, is_numeric($_REQUEST['downtime_duration']) ? $_REQUEST['downtime_duration'] : 0 );
+	  break;
+
+    }
 
   }
 
