@@ -53,42 +53,71 @@ print '
 <div class="alert alert-success">
 ';
 
-foreach ( $_REQUEST['alert'] as $index => $alert ) {
-  // If it's regex_search we are encoding hostname and alert with a pipe
-  if ( $regex_search ) {
-    if ( preg_match("/^(.*)(\|)(.*)/", $alert, $out ) ) {
-      $host_name = $out[1];
-      $alert_name = $out[3];
-    } else {
-      continue;
-    }
-  } else {
-    $alert_name = $alert;
-  }
+######################################################################################
+# If alert hash is not available we are operating on a single host
+######################################################################################
+if ( !isset($_REQUEST['alert']) or size($_REQUEST['alert']) == 0 ) {
 
-  // Make sure alert exists
-  if ( isset($nagios['services'][$host_name][$alert_name] ) ) {
+  switch ( $_REQUEST['action'] ) {
 
-    print "<strong>" . $alert .  "</strong> " . $action . "<br />";
-
-
-    switch ( $_REQUEST['action'] ) {
-
-	case "disable_notifications":
-	  disable_service_notifications($host_name, $alert_name);
-	  break;
-	case "enable_notifications":
-	  enable_service_notifications($host_name, $alert_name);
-	  break;
-	case "downtime":
+      case "disable_notifications":
+	disable_host_notifications($host_name);
+	break;
+      case "enable_notifications":
+	enable_host_notifications($host_name);
+	break;
+      case "downtime":
+	schedule_host_downtime($host_name, is_numeric($_REQUEST['downtime_duration']) ? $_REQUEST['downtime_duration'] : 0 );
+	foreach ($nagios['services'][$host_name] as $alert_name => $details ) {
+	  print "Disabling $alert_name<br>";
 	  schedule_service_downtime($host_name, $alert_name, is_numeric($_REQUEST['downtime_duration']) ? $_REQUEST['downtime_duration'] : 0 );
-	  break;
-
-    }
+	}
+	break;
 
   }
 
-}
+  print "Command sent";
+
+} else {
+
+  foreach ( $_REQUEST['alert'] as $index => $alert ) {
+    // If it's regex_search we are encoding hostname and alert with a pipe
+    if ( $regex_search ) {
+      if ( preg_match("/^(.*)(\|)(.*)/", $alert, $out ) ) {
+	$host_name = $out[1];
+	$alert_name = $out[3];
+      } else {
+	continue;
+      }
+    } else {
+      $alert_name = $alert;
+    }
+
+    // Make sure alert exists
+    if ( isset($nagios['services'][$host_name][$alert_name] ) ) {
+
+      print "<strong>" . $alert .  "</strong> " . $action . "<br />";
+
+      switch ( $_REQUEST['action'] ) {
+
+	  case "disable_notifications":
+	    disable_service_notifications($host_name, $alert_name);
+	    break;
+	  case "enable_notifications":
+	    enable_service_notifications($host_name, $alert_name);
+	    break;
+	  case "downtime":
+	    schedule_service_downtime($host_name, $alert_name, is_numeric($_REQUEST['downtime_duration']) ? $_REQUEST['downtime_duration'] : 0 );
+	    break;
+
+      }
+
+    }
+
+  } // end of foreach ( $_REQUEST['alert'] as $index => $alert ) {
+
+} // end if ( !isset($_REQUEST['alert']) or size($_REQUEST['alert']) == 0 ) {
+
 
 print '</div>';
 
